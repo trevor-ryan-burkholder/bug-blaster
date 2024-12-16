@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles.css';
 
-export default function TicketForm({ dispatch }) {
+export default function TicketForm({ dispatch, editingTicket }) {
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState('1');
+
+    useEffect(() => {
+        if (editingTicket) {
+            console.log('editingTicket');
+            setTitle(editingTicket.title || "");
+            setDescription(editingTicket.description || "");
+            setPriority(editingTicket.priority || "1");
+        } else {
+            clearForm();
+        }
+    }, [editingTicket]);
 
     const priorityLabels = {
         1: 'Low',
@@ -23,16 +34,23 @@ export default function TicketForm({ dispatch }) {
         e.preventDefault();
 
         const ticketData = {
-            id: new Date().toISOString(),
+            id: editingTicket ? editingTicket.id : new Date().toISOString(),
             title,
             description,
             priority,
         }
 
         dispatch({
-            type: "ADD_TICKET",
+            type: editingTicket ? "UPDATE_TICKET" : "ADD_TICKET",
             payload: ticketData
         });
+
+        clearForm();
+    }
+
+    const handleCancel = () => {
+
+        dispatch({ type: 'CLEAR_EDITING_TICKET' });
 
         clearForm();
     }
@@ -44,7 +62,7 @@ export default function TicketForm({ dispatch }) {
                 <input name="title"
                     id="title"
                     type="text"
-                    value={title}
+                    value={title || ''}
                     className="form-input"
                     onChange={e => setTitle(e.target.value)} />
             </div>
@@ -53,7 +71,7 @@ export default function TicketForm({ dispatch }) {
                 <textarea name="description"
                     id="description"
                     type="text"
-                    value={description}
+                    value={description || ''}
                     className="form-input"
                     onChange={e => setDescription(e.target.value)} />
             </div>
@@ -75,6 +93,10 @@ export default function TicketForm({ dispatch }) {
             </fieldset>
 
             <button type='submit' className='button'>Submit</button>
+
+            {editingTicket && (
+                <button className='button' onClick={handleCancel}>Cancel Edit</button>
+            )}
         </form>
     )
 }
